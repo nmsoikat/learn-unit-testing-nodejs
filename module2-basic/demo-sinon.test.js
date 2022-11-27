@@ -24,7 +24,7 @@ describe("demo sinon", () => {
     })
 
     it("should stub console.warn", () => {
-      let stub = sinon.stub(console, 'warn')
+      let stub = sinon.stub(console, 'warn').callsFake(() => {console.log("stub catch the console.warn");})
 
       demoSinon.foo();
 
