@@ -19,6 +19,12 @@
   "homepage": "https://github.com/nmsoikat/learn-unit-testing-nodejs#readme",
   "devDependencies": {
     "chai": "^4.3.7",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "rewire": "^6.0.0",
+    "sinon": "^14.0.2",
+    "sinon-chai": "^3.7.0",
+    "chai-as-promised": "^7.1.1"
+  },
+  "dependencies": {
   }
 }
