@@ -12,3 +12,13 @@ exports.get = function (id, callback) {
     return callback(null, result)
   })
 }
+
+exports.delete = function(id) {
+  if(!id){
+    return Promise.reject(new Error("Invalid Id"))
+  }
+
+  return User.remove({
+    _id: id
+  })
+}
