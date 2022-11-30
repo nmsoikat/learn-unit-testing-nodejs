@@ -4,19 +4,19 @@ const users = require('./users');
 const expect = chai.expect;
 const sinon = require('sinon')
 const sinonChai = require('sinon-chai')
-const {eventually} = require('chai-as-promised')
+const chaiAsPromised = require('chai-as-promised')
 
 const sandbox = sinon.createSandbox()
 
 chai.use(sinonChai)
-chai.use(eventually)
+chai.use(chaiAsPromised)
 
 describe('user', () => {
 
 	let findStub;
 	let sampleArgs;
 	let sampleUser;
-	let deleteUser;
+	let deleteStub;
 
 	beforeEach(() => {
 		sampleUser = {
@@ -25,9 +25,9 @@ describe('user', () => {
 			email: 'foo@gmail.com'
 		}
 
-		findStub = sandbox.stub(mongoose.Model, 'findById').resolves(sampleUser);
+		findStub = sandbox.stub(mongoose.Model, 'find').resolves(sampleUser);
 
-		deleteUser = sandbox.stub(mongoose.Model, "delete").resolves(123)
+		deleteStub = sandbox.stub(mongoose.Model, "remove").resolves("just_return_fake_string")
 
 		console.log("before------each");
 	});
@@ -100,9 +100,12 @@ describe('user', () => {
 			return expect(users.delete()).to.eventually.be.rejectedWith("Invalid Id")
 		})
 
-		// it('should check for an id (using async)', () => {
-			
-		// })
+		it("should call user.remove", async ()=>{
+			let result = await users.delete(123)
+
+			expect(result).to.equal('just_return_fake_string')
+			expect(deleteStub).to.have.been.calledWith({_id: 123})
+		})
 
 	});
 });
