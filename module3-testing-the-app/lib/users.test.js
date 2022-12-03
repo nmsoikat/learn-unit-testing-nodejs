@@ -1,10 +1,13 @@
+const rewire = require('rewire');
 const chai = require('chai');
 const mongoose = require('mongoose');
-const users = require('./users');
 const expect = chai.expect;
 const sinon = require('sinon')
 const sinonChai = require('sinon-chai')
-const chaiAsPromised = require('chai-as-promised')
+const chaiAsPromised = require('chai-as-promised');
+
+let users = rewire('./users');
+const mailer = require('./mailer')
 
 const sandbox = sinon.createSandbox()
 
@@ -17,17 +20,19 @@ describe('user', () => {
 	let sampleArgs;
 	let sampleUser;
 	let deleteStub;
+	let mailerStub;
 
 	beforeEach(() => {
 		sampleUser = {
 			id: 123,
-			name:'foo',
+			name: 'foo',
 			email: 'foo@gmail.com'
 		}
 
 		findStub = sandbox.stub(mongoose.Model, 'find').resolves(sampleUser);
 
 		deleteStub = sandbox.stub(mongoose.Model, "remove").resolves("just_return_fake_string")
+		mailerStub = sandbox.stub(mailer, "sendWelcomeEmail").resolves("fake_email")
 
 		console.log("before------each");
 	});
@@ -36,6 +41,8 @@ describe('user', () => {
 		sandbox.restore()
 
 		console.log("after------each");
+
+		users = rewire('./users') //reset, after any changes made using rewire
 	});
 
 
@@ -100,12 +107,65 @@ describe('user', () => {
 			return expect(users.delete()).to.eventually.be.rejectedWith("Invalid Id")
 		})
 
-		it("should call user.remove", async ()=>{
+		it("should call user.remove", async () => {
 			let result = await users.delete(123)
 
 			expect(result).to.equal('just_return_fake_string')
-			expect(deleteStub).to.have.been.calledWith({_id: 123})
+			expect(deleteStub).to.have.been.calledWith({ _id: 123 })
 		})
 
 	});
+
+	context('create', () => {
+		let FakeUserClass, saveStub, result;
+
+		beforeEach(async () => {
+
+			saveStub = sandbox.stub().resolves(sampleUser) //return a function
+			// console.log(saveStub()); //return promise //{name: foo, ...}
+			FakeUserClass = sandbox.stub().returns({ save: saveStub })
+
+			users.__set__('User', FakeUserClass)
+			result = await users.create(sampleUser)
+			// console.log("result");
+			// console.log(result);
+		});
+
+		it("should reject invalid arguments", async () => {
+			// users.create(null).catch(err => {
+			// 	expect(err).to.be.instanceOf(Error)
+			// 	expect(err.message).to.equal("Invalid arguments")
+			// })
+
+			// users.create({}).catch(err => {
+			// 	expect(err).to.be.instanceOf(Error)
+			// 	expect(err.message).to.equal("Invalid arguments")
+			// })
+
+			await expect(users.create()).to.eventually.be.rejectedWith("Invalid arguments")
+			await expect(users.create({ name: 'foo' })).to.eventually.be.rejectedWith("Invalid arguments")
+			await expect(users.create({ email: 'foo@devapp.com' })).to.eventually.be.rejectedWith("Invalid arguments")
+
+		})
+
+		it("should called with new", async () => {
+			expect(FakeUserClass).to.have.been.calledWithNew;
+			expect(FakeUserClass).to.have.been.calledWith(sampleUser)
+		})
+
+		it("should save the user", async () => {
+			expect(saveStub).to.have.been.called
+		})
+
+		it("should call mailer with email and name", () => {
+			expect(mailerStub).to.have.been.calledWith(sampleUser.email, sampleUser.name)
+		})
+
+		//for catch block
+		it("should reject error", async () => {
+			saveStub.rejects(new Error('fake'))
+
+			await expect(users.create(sampleUser)).to.eventually.be.rejectedWith('fake')
+		})
+	})
 });
