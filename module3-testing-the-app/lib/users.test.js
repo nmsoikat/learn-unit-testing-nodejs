@@ -26,10 +26,11 @@ describe('user', () => {
 		sampleUser = {
 			id: 123,
 			name: 'foo',
-			email: 'foo@gmail.com'
+			email: 'foo@gmail.com',
+			save: sandbox.stub().resolves()
 		}
 
-		findStub = sandbox.stub(mongoose.Model, 'find').resolves(sampleUser);
+		findStub = sandbox.stub(mongoose.Model, 'findById').resolves(sampleUser);
 
 		deleteStub = sandbox.stub(mongoose.Model, "remove").resolves("just_return_fake_string")
 		mailerStub = sandbox.stub(mailer, "sendWelcomeEmail").resolves("fake_email")
@@ -57,6 +58,8 @@ describe('user', () => {
 		});
 
 		it('should call findUserById with Id and return result', (done) => {
+			sandbox.restore();
+
 			let stub = sandbox.stub(mongoose.Model, 'findById').yields(null, { name: 'foo' })
 			// return this or resolve this for findById
 			// .yields(null, {name: 'foo'}) //error -> null, data-> {name: 'foo'}
@@ -74,7 +77,8 @@ describe('user', () => {
 		});
 
 		it('should catch error if there is one', (done) => {
-			let stub = sinon.stub(mongoose.Model, 'findById').yields(new Error("fake error"))
+			sandbox.restore()
+			let stub = sandbox.stub(mongoose.Model, 'findById').yields(new Error("fake error"))
 
 			users.get(123, (err, result) => {
 				expect(stub).to.have.been.calledOnce;
@@ -166,6 +170,27 @@ describe('user', () => {
 			saveStub.rejects(new Error('fake'))
 
 			await expect(users.create(sampleUser)).to.eventually.be.rejectedWith('fake')
+		})
+	})
+
+	context('update user', () => {
+		it("should find user by id", async () => {
+			await users.update(123, { name: 'bar' })
+			expect(findStub).to.have.been.calledWith(123)
+		})
+
+		it("should call user.save", async () => {
+			await users.update(123, { name: 'bar' })
+
+			expect(sampleUser.save).to.have.been.calledOnce
+		})
+
+		it("should reject if there is an error", async () => {
+			//edit our find stub that can throw error
+			findStub.throws(new Error('fake'))
+
+			//findStub will call when we call users.update()
+			await expect(users.update(123, { name: 'bar' })).to.eventually.be.rejectedWith('fake')
 		})
 	})
 });
