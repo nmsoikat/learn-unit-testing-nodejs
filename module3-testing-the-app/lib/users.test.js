@@ -193,4 +193,21 @@ describe('user', () => {
 			await expect(users.update(123, { name: 'bar' })).to.eventually.be.rejectedWith('fake')
 		})
 	})
+
+	context('reset password', () => {
+		let resetStub;
+
+		beforeEach(() => {
+			resetStub = sandbox.stub(mailer, 'sendPasswordResetEmail').resolves("reset")
+		})
+
+		it("should check for email", async () => {
+			await expect(users.resetPassword()).to.eventually.be.rejectedWith("Invalid email")
+		})
+
+		it("should call send passwordResetEmail", async () => {
+			await users.resetPassword("foo@bar.com");
+			expect(resetStub).to.have.been.calledWith('foo@bar.com')
+		})
+	})
 });
