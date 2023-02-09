@@ -7,64 +7,62 @@ const sinonChai = require('sinon-chai');
 chai.use(sinonChai);
 const rewire = require('rewire');
 
-var sandbox = sinon.sandbox.create();
+var sandbox = sinon.createSandbox()
 var mailer = rewire('./mailer');
 
-describe('mailer', ()=>{
+describe('mailer', () => {
     let emailStub;
 
-    beforeEach(()=>{
-        emailStub = sandbox.stub().resolves('done');
-        mailer.__set__('sendEmail', emailStub);
+    beforeEach(() => {
+        emailStub = sandbox.stub().resolves("Done")
+        mailer.__set__('sendEmail', emailStub)
     })
 
-    afterEach(()=>{
+    afterEach(() => {
         sandbox.restore();
-        mailer = rewire('./mailer');
+        mailer = rewire('./mailer.js')
     })
 
-    context('sendWelcomeEmail', ()=>{
-        it('should check for email and name', async()=>{
-            await expect(mailer.sendWelcomeEmail()).to.eventually.be.rejectedWith('Invalid input');
-            await expect(mailer.sendWelcomeEmail('foo@bar.com')).to.eventually.be.rejectedWith('Invalid input');
+    context("sendWelcomeEmail", () => {
+        it("should check for email and name", async () => {
+            await expect(mailer.sendWelcomeEmail()).to.eventually.be.rejectedWith("Invalid input")
+            await expect(mailer.sendWelcomeEmail("foo@gmail.com")).to.eventually.be.rejectedWith("Invalid input")
         })
 
-        it('should call sendEmail with email and message', async()=>{
-            await mailer.sendWelcomeEmail('foo@bar.com', 'foo');
-            expect(emailStub).to.have.been.calledWith('foo@bar.com', 'Dear foo, welcome to our family!');
-        })
-    })
-
-    context('sendPasswordResetEmail', ()=>{
-        it('should check for email', async()=>{
-            await expect(mailer.sendPasswordResetEmail()).to.eventually.be.rejectedWith('Invalid input');
-        })
-
-        it('should call sendEmail with email and message', async()=>{
-            await mailer.sendPasswordResetEmail('foo@bar.com');
-            expect(emailStub).to.have.been.calledWith('foo@bar.com', 'Please click http://some_link to reset your password.');
+        it("should call sendEmail with email and message", async () => {
+            await mailer.sendWelcomeEmail("foo@gmail.com", "foo")
+            expect(emailStub).to.have.been.calledWith("foo@gmail.com", "Dear foo, welcome to our family!")
         })
     })
 
-    context('sendEmail', ()=>{
-        let sendEmail;
-
-        beforeEach(()=>{
-            mailer = rewire('./mailer');
-            sendEmail = mailer.__get__('sendEmail');
+    context("sendPasswordResetEmail", () => {
+        it("should check for email", async () => {
+            await expect(mailer.sendPasswordResetEmail()).to.eventually.be.rejectedWith("Invalid input")
         })
 
-        it('should check for email and body', async()=>{
-            await expect(sendEmail()).to.eventually.be.rejectedWith('Invalid input');
-            await expect(sendEmail('foo@bar.com')).to.eventually.be.rejectedWith('Invalid input');
+        it("should call sendEmail with email and message", async () => {
+            await mailer.sendPasswordResetEmail("foo@gmail.com")
+            expect(emailStub).to.have.been.calledWith("foo@gmail.com", "Please click http://some_link to reset your password.")
+        })
+    })
+
+    context("sendEmail", () => {
+        let sendEmail
+
+        beforeEach(() => {
+            mailer = rewire('./mailer.js')
+            sendEmail = mailer.__get__("sendEmail")
         })
 
-        it('should call sendEmail with email and message', async()=>{
-            //stub actual mailer
-            let stub = sandbox.stub(console, 'log').resolves('done');
-            let result = await(sendEmail('foo@bar.com', 'welcome'));
+        it("should check for email and body", async () => {
+            await expect(sendEmail()).to.eventually.be.rejectedWith("Invalid input")
+            await expect(sendEmail("foo@gmail.com")).to.eventually.be.rejectedWith("Invalid input")
+        })
 
-            expect(result).to.equal('Email sent');
+        it("should call sendEmail with email and message", async () => {
+            let result = await (sendEmail('foo@gmail.com', 'welcome'))
+
+            expect(result).to.equal("Email sent")
         })
     })
 })
