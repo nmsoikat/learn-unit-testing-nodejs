@@ -7,7 +7,6 @@ const sinonChai = require('sinon-chai');
 chai.use(sinonChai);
 const rewire = require('rewire');
 const request = require('supertest');
-
 var app = rewire('./app');
 var users = require('./users');
 var auth = require('./auth');
@@ -48,6 +47,7 @@ describe('app', () => {
 
         it('should call handleError on error', (done) => {
             //if we do reject "then block will execute"
+            const token = '1gaQzRP8yGaA7LLwIqYVg066Dcw02_ciTeUIhPoODINo'
             createStub = sandbox.stub(users, 'create').rejects(new Error('fake_error'));
 
             errorStub = sandbox.stub().callsFake((response, error) => {
