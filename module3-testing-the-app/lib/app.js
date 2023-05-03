@@ -7,7 +7,7 @@ const db = require('../config/database');
 const users = require('./users');
 const auth = require('./auth');
 
-mongoose.connect(db());
+// mongoose.connect(db());
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -51,7 +51,7 @@ app.put('/user/:id', function (req, res) {
 });
 
 app.delete('/user/:id', auth.isAuthorized, function (req, res) {
-    users.delete({ id: req.params.id, name: 'foo' }).then((result) => {
+    users.delete(req.params.id).then((result) => {
         res.json(result);
     }).catch((err) => {
         handleError(res, err);
