@@ -1,29 +1,37 @@
-const chai = require('chai');
-const expect = chai.expect;
+const chai = require('chai')
+const expect = chai.expect
 
-var User = require('./user');
+const User = require('./user')
 
-describe('User model', ()=>{
-    it('should return error is requried ares are missing', (done)=>{
-        let user = new User();
-        
-        user.validate((err)=>{
-            expect(err.errors.name).to.exist;
-            expect(err.errors.email).to.exist;
-            expect(err.errors.age).to.not.exist;
+describe("User model", () => {
+    it("should check error for required field are missing", (done) => {
+        const user = new User(); //create empty user
 
-            done();
+        //name, email filed are required but we have not pass any value when create a new User()
+        //it will generate error
+
+        // user.validate //mongodb method
+        user.validate(err => {
+            // err.error.name //mongodb validation error format
+            expect(err.errors.name).to.exist //name is required so this filed will exist in `errors` object
+            expect(err.errors.email).to.exist //email is required so this email filed will exist in `errors` object
+            expect(err.errors.age).to.not.exist //not required filed so it will not exist in `errors` object
+
+            done()
         })
     })
 
-    it('should have optional age field', (done)=>{
-        let user = new User({
+    it("should have optional age field", (done) => {
+        const user = new User({
             name: 'foo',
-            email: 'foo@bar.com',
-            age: 35
+            email: 'foo@gmail.com',
+            age: 33
         })
 
-        expect(user).to.have.property('age').to.equal(35);
-        done();
+        expect(user)
+            .to.have.property('age')
+            .to.equal(33)
+
+        done()
     })
 })
